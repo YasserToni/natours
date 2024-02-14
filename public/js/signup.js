@@ -14,11 +14,13 @@ const signup = async (name, email, password, passwordConfirm) => {
       },
     });
     if (res.data.status === 'success') {
-      alert(
-        'Verifiy your email first (Verification sent to email), and then try to login',
-      );
+      // alert(
+      //   'Verifiy your email first (Verification sent to email), and then try to login',
+      // );
+      alert('signup successfully');
       window.setTimeout(() => {
-        location.assign('/login');
+        // location.assign('/login');
+        location.assign('/');
       }, 1000);
     }
   } catch (err) {

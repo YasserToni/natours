@@ -43,60 +43,73 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
-exports.signUp = async (req, res) => {
-  try {
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationTokenHashed = crypto
-      .createHash('sha256')
-      .update(verificationToken)
-      .digest('hex');
-    const newUser = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
-      passwordChangedAt: req.body.passwordChangedAt,
-      // role: req.body.role,
-      verificationTokenExpires: Date.now() + 10 * 60 * 1000,
-      verificationToken: verificationTokenHashed,
-    });
+// exports.signUp = async (req, res) => {
+//   try {
+//     const verificationToken = crypto.randomBytes(32).toString('hex');
+//     const verificationTokenHashed = crypto
+//       .createHash('sha256')
+//       .update(verificationToken)
+//       .digest('hex');
+//     const newUser = await User.create({
+//       name: req.body.name,
+//       email: req.body.email,
+//       password: req.body.password,
+//       passwordConfirm: req.body.passwordConfirm,
+//       passwordChangedAt: req.body.passwordChangedAt,
+//       // role: req.body.role,
+//       verificationTokenExpires: Date.now() + 10 * 60 * 1000,
+//       verificationToken: verificationTokenHashed,
+//     });
 
-    // const url = `${req.protocol}://${req.get('host')}/login`;
-    // await new Email(newUser, url).sendWelcome();
+//     // const url = `${req.protocol}://${req.get('host')}/login`;
+//     // await new Email(newUser, url).sendWelcome();
 
-    // send it to user's email
-    const verifiyURL = `${req.protocol}://${req.get(
-      'host',
-    )}/api/v1/users/verification/${verificationToken}`;
+//     // send it to user's email
+//     const verifiyURL = `${req.protocol}://${req.get(
+//       'host',
+//     )}/api/v1/users/verification/${verificationToken}`;
 
-    // const message = `Verifiy your email? submit this: ${verifiyURL}.\n`;
-    try {
-      // await sendEmail({
-      //   email: newUser.email, // req.body.email
-      //   subject: 'Your validation token (valid for 10 min)',
-      //   message,
-      // });
-      await new Email(newUser, verifiyURL).sendverification();
-      res.status(200).json({
-        status: 'success',
-        message:
-          'Verifiy your email first (Verification sent to email), and then try to login',
-      });
-    } catch (err) {
-      return res.status(500).json({
-        status: 'fail',
-        message:
-          'There was an error sending email verification, try again later',
-      });
-    }
-    createSendToken(newUser, 200, res);
-  } catch (err) {
-    res.status(500).json({
-      status: 'fail',
-      message: err,
-    });
-  }
-};
+//     // const message = `Verifiy your email? submit this: ${verifiyURL}.\n`;
+//     try {
+//       // await sendEmail({
+//       //   email: newUser.email, // req.body.email
+//       //   subject: 'Your validation token (valid for 10 min)',
+//       //   message,
+//       // });
+//       await new Email(newUser, verifiyURL).sendverification();
+//       res.status(200).json({
+//         status: 'success',
+//         message:
+//           'Verifiy your email first (Verification sent to email), and then try to login',
+//       });
+//     } catch (err) {
+//       return res.status(500).json({
+//         status: 'fail',
+//         message:
+//           'There was an error sending email verification, try again later',
+//       });
+//     }
+//   } catch (err) {
+//     res.status(500).json({
+//       status: 'fail',
+//       message: err,
+//     });
+//   }
+// };
+
+exports.signUp = catchAsync(async (req, res, next) => {
+  const newUser = await User.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+  });
+
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  await new Email(newUser, url).sendWelcome();
+
+  createSendToken(newUser, 200, res);
+});
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
